@@ -1,0 +1,93 @@
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@{
+    ViewData["Title"] = "Room";
+}
+
+<style>
+    .border
+    {
+        padding:5px;
+        background-color: lightcyan;
+        width:auto !important;
+    }
+</style>
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <div class="text-center">
+        <h1 class="display-4">Chat Room</h1>
+        <p>Here you can chat with others.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-12" id="MessageHistory">
+            <!-- HISTORIC MESSAGE HERE -->
+        </div>
+        <div class="col-12">
+            <input type="text" id="inputMessage" name="inputMessage"/>
+            <input type="button" id="sendMessageButton" name="sendMessageButton" value="Send"/>
+        </div>
+    </div>
+
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script>
+        var receivedMessageContainer = ""+
+                        "<div class='row'>"+
+                            "<div class='col-6'>"+
+                                "<div class='border border-success'>"+
+                                    "<div><b>{replaceForName}</b></div>"+
+                                    "<div>{replaceForMessage}</div>"+
+                                "</div>"+
+                            "</div>"+
+                        "</div>";
+
+        var sendMessageContainer = ""+
+                        "<div class='row text-right'>"+
+                            "<div class='col-6 offset-6'>"+
+                                "<div class='border border-success'>"+
+                                    "<div><b>You</b></div>"+
+                                    "<div>{replaceForMessage}</div>"+
+                                "</div>"+
+                            "</div>"+
+                        "</div>";
+
+        var connection = new signalR.HubConnectionBuilder().withUrl("/signalroom").build();
+        var userName = "@User.Identity.Name";
+
+        connection.on("ReceivedMessage", function(user, message){
+            $("#MessageHistory").append(receivedMessageContainer.replace("{replaceForMessage}", message).replace("{replaceForName}", user));
+        });
+
+        connection.start();
+
+        console.log(connection);
+
+        document.getElementById("sendMessageButton").addEventListener("click", function(event)
+        {
+            var message = document.getElementById("inputMessage").value;
+
+            $("#MessageHistory").append(sendMessageContainer.replace("{replaceForMessage}", message));
+
+            connection.invoke("SendMessage", connection.connection.connectionId, userName, message).then(function(){
+                document.getElementById("inputMessage").value = "";
+            });
+            event.preventDefault();
+        });
+
+    </script>
+}
+else
+{
+    <div class="text-center">
+        <h1 class="display-4">Error</h1>
+        <p>You need to log in for viewing this page.</p>
+        <p><b>Redirecting to the home on a few seconds . . . . . .</b></p>
+    </div>
+
+    <script>
+        setTimeout(function(){
+          location.href = '/home';
+        }, 3000); //run this after 3 seconds
+    </script>
+}
