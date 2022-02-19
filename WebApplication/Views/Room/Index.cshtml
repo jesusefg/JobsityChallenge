@@ -1,5 +1,7 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@model System.Collections.Generic.List<ChatHistoryModel>
+@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
 @{
     ViewData["Title"] = "Room";
 }
@@ -23,6 +25,36 @@
     <div class="row">
         <div class="col-12" id="MessageHistory">
             <!-- HISTORIC MESSAGE HERE -->
+            @{string userId = UserManager.GetUserAsync(User).Result.Id;}
+            @if(Model != null && Model.Count() > 0)
+            {
+                
+                foreach(var M in Model)
+                {
+                    if(M.SenderId == userId)
+                    {
+                        <div class="row text-right">
+                            <div class="col-6 offset-6">
+                                <div class="border border-success">
+                                    <div><b>You</b></div>
+                                    <div>@M.Message</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="border border-success">
+                                    <div><b>@M.SenderName</b></div>
+                                    <div>@M.Message</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
         </div>
         <div class="col-12">
             <input type="text" id="inputMessage" name="inputMessage"/>
@@ -53,7 +85,7 @@
                         "</div>";
 
         var connection = new signalR.HubConnectionBuilder().withUrl("/signalroom").build();
-        var userName = "@User.Identity.Name";
+        var userId = "@userId";
 
         connection.on("ReceivedMessage", function(user, message){
             $("#MessageHistory").append(receivedMessageContainer.replace("{replaceForMessage}", message).replace("{replaceForName}", user));
@@ -67,10 +99,11 @@
         {
             var message = document.getElementById("inputMessage").value;
 
-            $("#MessageHistory").append(sendMessageContainer.replace("{replaceForMessage}", message));
-
-            connection.invoke("SendMessage", connection.connection.connectionId, userName, message).then(function(){
+            connection.invoke("SendMessage", connection.connection.connectionId, userId, message).then(function(){
+                $("#MessageHistory").append(sendMessageContainer.replace("{replaceForMessage}", message));
                 document.getElementById("inputMessage").value = "";
+            }).catch(function(error){
+                alert(error);
             });
             event.preventDefault();
         });

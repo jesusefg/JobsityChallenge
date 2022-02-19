@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApplication.Data;
+using WebApplication.Data.Interfaces;
 using WebApplication.SignalRooms;
 
 namespace WebApplication
@@ -33,6 +34,8 @@ namespace WebApplication
                     Configuration.GetConnectionString("DefaultConnection")));
             services.AddDatabaseDeveloperPageExceptionFilter();
 
+            DependencyRegistrar.Register(services);
+
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
@@ -41,7 +44,7 @@ namespace WebApplication
 
             services.AddCors(option =>
             {
-            option.AddDefaultPolicy(service =>
+                option.AddDefaultPolicy(service =>
                 {
                     service.WithOrigins("https://localhost")
                     .AllowAnyHeader()
