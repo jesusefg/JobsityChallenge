@@ -52,13 +52,14 @@
                                 </div>
                             </div>
                         </div>
+
                     }
                 }
             }
         </div>
         <div class="col-12">
-            <input type="text" id="inputMessage" name="inputMessage"/>
-            <input type="button" id="sendMessageButton" name="sendMessageButton" value="Send"/>
+            <input type="text" id="inputMessage" name="inputMessage" style="width:90%; margin-top:10px;"/>
+            <input type="button" id="sendMessageButton" name="sendMessageButton" value="Send" style="width:8%"/>
         </div>
     </div>
 
@@ -71,6 +72,21 @@
                                     "<div><b>{replaceForName}</b></div>"+
                                     "<div>{replaceForMessage}</div>"+
                                 "</div>"+
+                            "</div>"+
+                        "</div>";
+
+        var kiwiMessageContainer = ""+
+                        "<div class='row'>"+
+                            "<div class='col-6 border border-success'>"+
+                                "<div class='row'>"+
+                                    "<div class='col-1'>" +
+                                        "<img style='width:200%' src='Images/kiwiImage.png'/>"+
+                                    "</div>"+
+                                    "<div class='col-11'>"+
+                                        "<div><b>{replaceForName}</b></div>"+
+                                        "<div>{replaceForMessage}</div>"+
+                                    "</div>"+
+                                "</div>" +
                             "</div>"+
                         "</div>";
 
@@ -88,7 +104,13 @@
         var userId = "@userId";
 
         connection.on("ReceivedMessage", function(user, message){
-            $("#MessageHistory").append(receivedMessageContainer.replace("{replaceForMessage}", message).replace("{replaceForName}", user));
+
+            if(user == "Kiwi"){
+                $("#MessageHistory").append(kiwiMessageContainer.replace("{replaceForMessage}", message).replace("{replaceForName}", user));
+            }else{
+                $("#MessageHistory").append(receivedMessageContainer.replace("{replaceForMessage}", message).replace("{replaceForName}", user));
+            }
+
         });
 
         connection.start();
