@@ -3,5 +3,7 @@
     public interface IRabbitMQService
     {
         void Connect();
+
+        void SendMessageToKiwi(string message);
     }
 }

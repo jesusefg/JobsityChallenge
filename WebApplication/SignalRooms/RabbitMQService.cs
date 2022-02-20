@@ -63,5 +63,27 @@ namespace WebApplication.SignalRooms
                                     autoAck: true,
                                     consumer: consumer);
         }
+
+        //Kiwi is the name of the bot that will receive the message
+        public void SendMessageToKiwi(string message)
+        {
+            var factory = new ConnectionFactory() { Uri = new Uri(_rabbitMQUrl) };
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                channel.QueueDeclare(queue: _writeQueueName,
+                                     durable: false,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null);
+
+                var body = Encoding.UTF8.GetBytes(message);
+
+                channel.BasicPublish(exchange: "",
+                                     routingKey: _writeQueueName,
+                                     basicProperties: null,
+                                     body: body);
+            }
+        }
     }
 }

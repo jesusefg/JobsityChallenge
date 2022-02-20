@@ -17,16 +17,16 @@ namespace WebApplication.SignalRooms
     {
         private readonly ISQLRepository<ChatHistory> _chatRepository;
         private readonly ISQLRepository<IdentityUser> _userRepository;
+        private readonly IRabbitMQService _rabbitMQService;
 
-        private const int _sleepTime = 1000 * 3; // 3 seconds
-        private const string _rabbitMQUrl = "amqps://pnceccsp:BFnfl8mUyG67F5oILrS6Z9PX5rfqdcDN@woodpecker.rmq.cloudamqp.com/pnceccsp";
-        private const string _writeQueueName = "kiwi";
-        private const string _readQueueName = "talksity";
-
-        public SignalRoom(ISQLRepository<ChatHistory> chatRepository, ISQLRepository<IdentityUser> userRepository)
+        public SignalRoom(
+            ISQLRepository<ChatHistory> chatRepository,
+            ISQLRepository<IdentityUser> userRepository,
+            IRabbitMQService rabbitMQService)
         {
             _chatRepository = chatRepository;
             _userRepository = userRepository;
+            _rabbitMQService = rabbitMQService;
         }
 
         public async Task SendMessage(string connectionID, string userId, string message)
@@ -34,7 +34,7 @@ namespace WebApplication.SignalRooms
 
             if(message.Length > 0 && message.ToCharArray()[0] == '/')
             {
-                SendMessageToKiwi(message);
+                _rabbitMQService.SendMessageToKiwi(message);
             }
             else
             {
@@ -53,28 +53,6 @@ namespace WebApplication.SignalRooms
             }
 
             
-        }
-
-        //Kiwi is the name of the bot that will receive the message
-        public void SendMessageToKiwi(string message)
-        {
-            var factory = new ConnectionFactory() { Uri = new Uri(_rabbitMQUrl) };
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue: _writeQueueName,
-                                     durable: false,
-                                     exclusive: false,
-                                     autoDelete: false,
-                                     arguments: null);
-
-                var body = Encoding.UTF8.GetBytes(message);
-
-                channel.BasicPublish(exchange: "",
-                                     routingKey: _writeQueueName,
-                                     basicProperties: null,
-                                     body: body);
-            }
         }
     }
 }
