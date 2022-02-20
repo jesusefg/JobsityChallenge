@@ -41,6 +41,7 @@ namespace WebApplication
             services.AddControllersWithViews();
 
             services.AddSignalR();
+            services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
             services.AddCors(option =>
             {
@@ -55,7 +56,7 @@ namespace WebApplication
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime lifetime)
         {
             if (env.IsDevelopment())
             {
@@ -85,6 +86,11 @@ namespace WebApplication
                     pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapRazorPages();
                 endpoints.MapHub<SignalRoom>("/signalroom");
+            });
+
+            lifetime.ApplicationStarted.Register(() => {
+                var rabbitMQService = (IRabbitMQService)app.ApplicationServices.GetService(typeof(IRabbitMQService));
+                rabbitMQService.Connect();
             });
         }
     }
