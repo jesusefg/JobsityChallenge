@@ -4,18 +4,19 @@ namespace KiwiBot
 {
     internal class Program
     {
-        private const int _sleepTime = 1000 * 3; // 3 seconds
+        private const int _sleepTime = 1000 * 300; // 300 seconds
 
         static void Main(string[] args)
         {
             //Instantiate the KiwiBot
             Kiwi bot = new Kiwi(true); // true for production purposes
 
+            bot.ReadQueue();
 
-            // execute an infinite loop to read the queue every fixed time
+            // execute an infinite loop to prevent the application for closing
+            // and terminting the consumer process
             do
             {
-                bot.ReadQueue();
                 Thread.Sleep(_sleepTime);
             } while (true);
         }

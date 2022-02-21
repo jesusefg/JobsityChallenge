@@ -5,9 +5,11 @@ using WebApplication.Data.Interfaces;
 using System.Linq;
 using WebApplication.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebApplication.Controllers
 {
+    [Authorize]
     public class RoomController : Controller
     {
         private readonly ISQLRepository<ChatHistory> _chatRepository;

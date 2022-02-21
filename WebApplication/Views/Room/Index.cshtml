@@ -58,7 +58,7 @@
             }
         </div>
         <div class="col-12">
-            <input type="text" id="inputMessage" name="inputMessage" style="width:90%; margin-top:10px;"/>
+            <input type="text" id="inputMessage" name="inputMessage" style="width:90%; margin-top:10px;" onkeypress="sendMessageWithEnter(event)"/>
             <input type="button" id="sendMessageButton" name="sendMessageButton" value="Send" style="width:8%"/>
         </div>
     </div>
@@ -80,7 +80,7 @@
                             "<div class='col-6 border border-success'>"+
                                 "<div class='row'>"+
                                     "<div class='col-1'>" +
-                                        "<img style='width:200%' src='Images/kiwiImage.png'/>"+
+                                        "<img style='width:200%' src='/Images/kiwiImage.png'/>"+
                                     "</div>"+
                                     "<div class='col-11'>"+
                                         "<div><b>{replaceForName}</b></div>"+
@@ -119,6 +119,9 @@
 
         document.getElementById("sendMessageButton").addEventListener("click", function(event)
         {
+            if($("#inputMessage").val().trim() == "")
+                return;
+
             var message = document.getElementById("inputMessage").value;
 
             connection.invoke("SendMessage", connection.connection.connectionId, userId, message).then(function(){
@@ -129,6 +132,13 @@
             });
             event.preventDefault();
         });
+
+        function sendMessageWithEnter(event){
+            if (event.keyCode == 13 || event.which == 13) {
+                $('#sendMessageButton').click();
+                event.preventDefault();
+            }
+        }
 
     </script>
 }
