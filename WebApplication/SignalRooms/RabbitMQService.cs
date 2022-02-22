@@ -46,13 +46,16 @@ namespace WebApplication.SignalRooms
             consumer.Received += delegate (object model, BasicDeliverEventArgs ea)
             {
                 var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
+                var data = Encoding.UTF8.GetString(body);
+
+                string roomName = data.Split('|')[0];
+                string message = data.Split('|')[1];
 
                 // Get the ChatHub from SignalR (using DI)
                 var chatHub = (IHubContext<SignalRoom>)_serviceProvider.GetService(typeof(IHubContext<SignalRoom>));
 
                 // Send message to all users
-                chatHub.Clients.All.SendAsync("ReceivedMessage", "Kiwi", message);
+                chatHub.Clients.Group(roomName).SendAsync("ReceivedMessage", "Kiwi", message);
                 // send back message to users
             };
             _readChannel.BasicConsume(queue: _readQueueName,

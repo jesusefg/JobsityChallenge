@@ -11,6 +11,7 @@ namespace WebApplication.Data
         {
             services.AddTransient<ISQLRepository<ChatHistory>, SQLRepository<ChatHistory>>();
             services.AddTransient<ISQLRepository<IdentityUser>, SQLRepository<IdentityUser>>();
+            services.AddTransient<ISQLRepository<ChatRoom>, SQLRepository<ChatRoom>>();
         }
     }
 }

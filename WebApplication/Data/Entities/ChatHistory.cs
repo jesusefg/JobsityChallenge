@@ -10,10 +10,14 @@ namespace WebApplication.Data.Entities
 
         public string SenderId { get; set; }
 
+        public int RoomId { get; set; }
+
         public string Message { get; set; }
 
         public DateTime TimeStamp { get; set; }
 
         public virtual IdentityUser Sender { get; set; }
+
+        public virtual ChatRoom Room { get; set; }
     }
 }

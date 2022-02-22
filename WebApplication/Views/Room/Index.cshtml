@@ -3,7 +3,7 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
-    ViewData["Title"] = "Room";
+    ViewData["Title"] = "Room " + ViewBag.roomName;
 }
 
 <style>
@@ -18,7 +18,7 @@
 @if (SignInManager.IsSignedIn(User))
 {
     <div class="text-center">
-        <h1 class="display-4">Chat Room</h1>
+        <h1 class="display-4">Room @ViewBag.roomName</h1>
         <p>Here you can chat with others.</p>
     </div>
 
@@ -65,6 +65,7 @@
 
     <script src="~/js/signalr/dist/browser/signalr.js"></script>
     <script>
+        var roomName = "@ViewBag.roomName";
         var receivedMessageContainer = ""+
                         "<div class='row'>"+
                             "<div class='col-6'>"+
@@ -113,9 +114,11 @@
 
         });
 
-        connection.start();
+        connection.start().then(function(){
+            connection.invoke("Join", roomName);
+        });
 
-        console.log(connection);
+        
 
         document.getElementById("sendMessageButton").addEventListener("click", function(event)
         {
@@ -124,7 +127,7 @@
 
             var message = document.getElementById("inputMessage").value;
 
-            connection.invoke("SendMessage", connection.connection.connectionId, userId, message).then(function(){
+            connection.invoke("SendMessage",connection.connection.connectionId, roomName, userId, message).then(function(){
                 $("#MessageHistory").append(sendMessageContainer.replace("{replaceForMessage}", message));
                 document.getElementById("inputMessage").value = "";
             }).catch(function(error){

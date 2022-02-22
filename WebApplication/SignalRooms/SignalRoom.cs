@@ -17,24 +17,31 @@ namespace WebApplication.SignalRooms
     {
         private readonly ISQLRepository<ChatHistory> _chatRepository;
         private readonly ISQLRepository<IdentityUser> _userRepository;
+        private readonly ISQLRepository<ChatRoom> _roomRepository;
         private readonly IRabbitMQService _rabbitMQService;
 
         public SignalRoom(
             ISQLRepository<ChatHistory> chatRepository,
             ISQLRepository<IdentityUser> userRepository,
+            ISQLRepository<ChatRoom> roomRepository,
             IRabbitMQService rabbitMQService)
         {
             _chatRepository = chatRepository;
             _userRepository = userRepository;
+            _roomRepository = roomRepository;
             _rabbitMQService = rabbitMQService;
         }
 
-        public async Task SendMessage(string connectionID, string userId, string message)
+        public async Task SendMessage(string connectionId, string roomName, string userId, string message)
         {
+            int? roomId = _roomRepository.GetAll().Where(x => x.Name == roomName).Select(x => x.Id).FirstOrDefault();
+
+            if (!roomId.HasValue)
+                return;
 
             if(message.Length > 0 && message.ToCharArray()[0] == '/')
             {
-                _rabbitMQService.SendMessageToKiwi(message);
+                _rabbitMQService.SendMessageToKiwi(string.Format("{0}|{1}", roomName, message));
             }
             else
             {
@@ -44,15 +51,20 @@ namespace WebApplication.SignalRooms
                 {
                     Message = message,
                     SenderId = userId,
-                    TimeStamp = DateTime.Now
+                    TimeStamp = DateTime.Now,
+                    RoomId = roomId.Value
                 };
 
                 _chatRepository.Insert(newChat);
 
-                await Clients.AllExcept(connectionID).SendAsync("ReceivedMessage", userName, message);
+                await Clients.GroupExcept(roomName, connectionId).SendAsync("ReceivedMessage", userName, message);
             }
 
-            
+        }
+
+        public async Task Join(string roomName)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, roomName);
         }
     }
 }

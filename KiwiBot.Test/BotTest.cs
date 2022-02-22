@@ -4,7 +4,7 @@ namespace KiwiBot.Test
 {
     public class BotTest
     {
-        private readonly Kiwi bot = new Kiwi(false); // false for testing purposes
+        private readonly Kiwi bot = new Kiwi(false); // set false for testing purposes
 
         [Fact]
         public void Test_Bot_Read_From_Queue()
@@ -15,7 +15,7 @@ namespace KiwiBot.Test
         [Fact]
         public void Test_Bot_Write_To_Queue()
         {
-            Assert.True(bot.WriteQueue("testMessage"));
+            Assert.True(bot.WriteQueue("testRoom", "testMessage"));
         }
 
         [Fact]

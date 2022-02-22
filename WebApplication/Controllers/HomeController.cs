@@ -1,26 +1,32 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
+using WebApplication.Data.Entities;
+using WebApplication.Data.Interfaces;
 using WebApplication.Models;
 
 namespace WebApplication.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ISQLRepository<ChatRoom> _roomRepository;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ISQLRepository<ChatRoom> roomRepository)
         {
-            _logger = logger;
+            _roomRepository = roomRepository;
         }
 
         public IActionResult Index()
         {
-            return View();
+            List<ChatRoomListModel> model = _roomRepository.GetAll()
+                                        .Select(x => new ChatRoomListModel
+                                        {
+                                            Name = x.Name
+                                        }).ToList();
+
+            return View(model);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

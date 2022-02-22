@@ -9,12 +9,12 @@ namespace KiwiBot
         static void Main(string[] args)
         {
             //Instantiate the KiwiBot
-            Kiwi bot = new Kiwi(true); // true for production purposes
+            Kiwi bot = new Kiwi(true); // set true for production purposes
 
             bot.ReadQueue();
 
             // execute an infinite loop to prevent the application for closing
-            // and terminting the consumer process
+            // and terminating the consumer process
             do
             {
                 Thread.Sleep(_sleepTime);

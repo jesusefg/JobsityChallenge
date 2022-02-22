@@ -87,32 +87,53 @@ namespace KiwiBot
             }
         }
 
-        public void AnalizeCommand(string message)
+        public void AnalizeCommand(string data)
         {
-            //get the command
-            string command = message.Split('=')[0].ToLower();
-
-            switch (command)
+            try
             {
-                case "/stock":
-                    if (message.Split('=').Length >= 1)
-                    {
-                        //get the parameter
-                        string parameter = message.Split('=')[1];
-                        GetStockQuote(parameter);
-                    }
-                    else
-                    {
-                        WriteQueue(string.Format("Missing parameter for command {0}", command));
-                    }
+                string roomName = data.Split('|')[0];
 
-                    break;
-                default:
-                    WriteQueue("Unknown command!");
-                    break;
+                string message = data.Split('|')[1];
+                //get the command
+                string command = message.Split('=')[0].ToLower();
+
+                switch (command)
+                {
+                    case "/stock":
+                        if (message.Split('=').Length >= 1)
+                        {
+                            //get the parameter
+                            string parameter = message.Split('=')[1];
+                            decimal? quote = GetStockQuote(parameter);
+
+                            if (quote.HasValue)
+                            {
+                                WriteQueue(roomName, string.Format(_stockQuoteMessage, parameter.ToUpper(), quote));
+                            }
+                            else
+                            {
+                                WriteQueue(roomName, "quote not found.");
+                            }
+                        }
+                        else
+                        {
+                            WriteQueue(roomName, string.Format("Missing parameter for command {0}", command));
+                        }
+
+                        break;
+                    default:
+                        WriteQueue(roomName, "Unknown command!");
+                        break;
+                }
+
+            }
+            catch(Exception ex)
+            {
+
             }
         }
 
+        //Connects to the external API to get the quotes
         public decimal? GetStockQuote(string parameter)
         {
             try
@@ -127,16 +148,7 @@ namespace KiwiBot
 
                     decimal? quote = GetQuote(results);
 
-                    if (quote.HasValue)
-                    {
-                        WriteQueue(string.Format(_stockQuoteMessage, parameter.ToUpper(), quote));
-                        return quote;
-                    }
-                    else
-                    {
-                        WriteQueue("quote not found");
-                        return null;
-                    }
+                    return quote;
                 }
             }
             catch(Exception ex)
@@ -145,6 +157,7 @@ namespace KiwiBot
             }
         }
 
+        //Parse the document
         public decimal? GetQuote(string results)
         {
             if (string.IsNullOrWhiteSpace(results)) return null;
@@ -182,11 +195,11 @@ namespace KiwiBot
         }
 
         //Send message back to another queue to be read by the chat application (talksity)
-        public bool WriteQueue(string message)
+        public bool WriteQueue(string roomName, string message)
         {
             try
             {
-                var body = Encoding.UTF8.GetBytes(message);
+                var body = Encoding.UTF8.GetBytes(string.Format("{0}|{1}", roomName, message));
 
                 _writeChannel.BasicPublish(exchange: "",
                                             routingKey: _writeQueueName,

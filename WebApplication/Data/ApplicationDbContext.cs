@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using WebApplication.Data.Entities;
 
 namespace WebApplication.Data
@@ -10,6 +7,8 @@ namespace WebApplication.Data
     public class ApplicationDbContext : IdentityDbContext
     {
         DbSet<ChatHistory> ChatHistories { get; set; }
+
+        DbSet<ChatRoom> ChatRooms { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -20,6 +19,12 @@ namespace WebApplication.Data
         {
             modelBuilder.Entity<ChatHistory>()
                 .HasOne(x => x.Sender);
+
+            modelBuilder.Entity<ChatHistory>()
+                .HasOne(x => x.Room);
+
+            modelBuilder.Entity<ChatRoom>()
+                .HasOne(x => x.CreatedBy);
 
             base.OnModelCreating(modelBuilder);
         }
