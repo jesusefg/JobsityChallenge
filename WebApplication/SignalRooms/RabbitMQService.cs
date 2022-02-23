@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using WebApplication.Data.Entities;
 using WebApplication.Data.Interfaces;
+using WebApplication.Helpers;
 
 namespace WebApplication.SignalRooms
 {
@@ -20,12 +21,15 @@ namespace WebApplication.SignalRooms
 
         protected readonly IServiceProvider _serviceProvider;
 
-        private const string _rabbitMQUrl = "amqps://pnceccsp:BFnfl8mUyG67F5oILrS6Z9PX5rfqdcDN@woodpecker.rmq.cloudamqp.com/pnceccsp";
+        private readonly string _rabbitMQUrl;
         private const string _writeQueueName = "kiwi";
         private const string _readQueueName = "talksity";
+        private const string botUserName = "Kiwi";
 
         public RabbitMQService(IServiceProvider serviceProvider)
         {
+            _rabbitMQUrl = CryptoHelper.DecryptString("FVzeB0dh8GlZ8OlPv0nKgQYEq6pPMoUKDkz3b3u0CeMjLyGN39/kV/BuI5cXal6T7x+/m7hMnRgAdeN3F9nv+izRTcEv/FgMgR0a62wj2s7iAnCt5h07xunHIpGQKvx+1i/E8GbgBNOCUlL2xFO5fw==|TcdpGHB1jCUHb2WLVYJ17JD/N3g2pJd7hUO79St0UwU=");
+
             // Opens the connections to RabbitMQ
             _factory = new ConnectionFactory() { Uri = new Uri(_rabbitMQUrl) };
             _connection = _factory.CreateConnection();
@@ -55,14 +59,16 @@ namespace WebApplication.SignalRooms
                 string roomName = data.Split('|')[0];
                 string message = data.Split('|')[1];
 
-                string userName = "Kiwi";
+                
 
                 // Get the ChatHub from SignalR (using DI)
                 var chatHub = (IHubContext<SignalRoom>)_serviceProvider.GetService(typeof(IHubContext<SignalRoom>));
 
                 // Send message to all users
-                chatHub.Clients.Group(roomName).SendAsync("ReceivedMessage", userName, message);
+                chatHub.Clients.Group(roomName).SendAsync("ReceivedMessage", botUserName, message);
 
+
+                //We must create a scope to access the database
                 using(var scope = _serviceProvider.CreateScope())
                 {
                     var _chatRepository = scope.ServiceProvider.GetRequiredService<ISQLRepository<ChatHistory>>();
@@ -74,11 +80,12 @@ namespace WebApplication.SignalRooms
                     if (!roomId.HasValue)
                         return;
 
-                    string userId = _userRepository.GetAll().Where(x => x.UserName == userName).Select(x => x.Id).FirstOrDefault();
+                    string userId = _userRepository.GetAll().Where(x => x.UserName == botUserName).Select(x => x.Id).FirstOrDefault();
 
                     if (string.IsNullOrWhiteSpace(userId))
                         return;
 
+                    // save the bot post into the database
                     ChatHistory newChat = new ChatHistory()
                     {
                         Message = message,
