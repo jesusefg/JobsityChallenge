@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Linq;
 using System.Text;
+using WebApplication.Data.Entities;
 using WebApplication.Data.Interfaces;
 
 namespace WebApplication.SignalRooms
@@ -51,12 +55,41 @@ namespace WebApplication.SignalRooms
                 string roomName = data.Split('|')[0];
                 string message = data.Split('|')[1];
 
+                string userName = "Kiwi";
+
                 // Get the ChatHub from SignalR (using DI)
                 var chatHub = (IHubContext<SignalRoom>)_serviceProvider.GetService(typeof(IHubContext<SignalRoom>));
 
                 // Send message to all users
-                chatHub.Clients.Group(roomName).SendAsync("ReceivedMessage", "Kiwi", message);
-                // send back message to users
+                chatHub.Clients.Group(roomName).SendAsync("ReceivedMessage", userName, message);
+
+                using(var scope = _serviceProvider.CreateScope())
+                {
+                    var _chatRepository = scope.ServiceProvider.GetRequiredService<ISQLRepository<ChatHistory>>();
+                    var _userRepository = scope.ServiceProvider.GetRequiredService<ISQLRepository<IdentityUser>>();
+                    var _roomRepository = scope.ServiceProvider.GetRequiredService<ISQLRepository<ChatRoom>>();
+
+                    int? roomId = _roomRepository.GetAll().Where(x => x.Name == roomName).Select(x => x.Id).FirstOrDefault();
+
+                    if (!roomId.HasValue)
+                        return;
+
+                    string userId = _userRepository.GetAll().Where(x => x.UserName == userName).Select(x => x.Id).FirstOrDefault();
+
+                    if (string.IsNullOrWhiteSpace(userId))
+                        return;
+
+                    ChatHistory newChat = new ChatHistory()
+                    {
+                        Message = message,
+                        SenderId = userId,
+                        TimeStamp = DateTime.Now,
+                        RoomId = roomId.Value
+                    };
+
+                    _chatRepository.Insert(newChat);
+                }
+                
             };
             _readChannel.BasicConsume(queue: _readQueueName,
                                     autoAck: true,
