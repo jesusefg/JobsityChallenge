@@ -1,8 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using WebApplication.Data;
 using WebApplication.Data.Interfaces;
 using WebApplication.Data.Seeds;
+using WebApplication.Helpers;
 using WebApplication.SignalRooms;
 
 namespace WebApplication
@@ -26,7 +25,8 @@ namespace WebApplication
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            var connectionString = Configuration.GetConnectionString("DefaultConnection");
+            //var connectionString = CryptoHelper.EncryptString("TextToEncript","Key");
+            var connectionString = CryptoHelper.DecryptString(Configuration.GetSection("Info")["Data"]);
             var contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseSqlServer(connectionString)
             .Options;
@@ -38,7 +38,7 @@ namespace WebApplication
             DependencyRegistrar.Register(services);
             new SeedHelper(new ApplicationDbContext(contextOptions)).Start();
 
-            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddControllersWithViews();
 

@@ -11,7 +11,7 @@ namespace KiwiBot
 {
     public class Kiwi
     {
-        private const string _rabbitMQUrl = "amqps://pnceccsp:BFnfl8mUyG67F5oILrS6Z9PX5rfqdcDN@woodpecker.rmq.cloudamqp.com/pnceccsp";
+        private readonly string _rabbitMQUrl;
 
         private const string _stockQuoteUrl = "https://stooq.com/q/l/?s={0}&f=sd2t2ohlcv&h&e=csv";
         private const string _stockQuoteMessage = "{0} quote is ${1} per share!.";
@@ -26,6 +26,7 @@ namespace KiwiBot
 
         public Kiwi(bool productionEnvironment)
         {
+            _rabbitMQUrl = CryptoHelper.DecryptString("OmBu/1qskdGU8GDtRg3/KiPI/hbZeL9W35o/xfstJJ6o5koy6fLzdL2eHL+tNqlJ1IisIYXGdMzhPJkC8eQFUtRsoG03c7uqkvbxarNt56FbZvufkLkYBEYdM/eeDf+89FKXqj5ULxvzpb+hzCD37g==|TcdpGHB1jCUHb2WLVYJ17JD/N3g2pJd7hUO79St0UwU=");
             if (productionEnvironment)
             {
                 _readQueueName = "kiwi";
